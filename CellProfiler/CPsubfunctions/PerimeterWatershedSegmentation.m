@@ -1,10 +1,9 @@
 function CutMask = PerimeterWatershedSegmentation(LabelImage,IntensityImage,PerimeterTrace,MaxEqivRadius,MinEquivAngle,ObjSizeThres,varargin)
-%PERIMETERWATERSHEDSEGMENTATION separates clumped objects along watershed lines between concave regions.
+%PERIMETERWATERSHEDSEGMENTATION separates clumped objects along watershed
+%lines between concave regions.
 %
-%   CUTMASK = PERIMETERWATERSHEDSEGMENTATION(LABELIMAGE, INTENSITYIMAGE, PERIMETERTRACE, ...
-%                                            MAXEQIVRADIUS, MINEQIVANGLE, OBJSIZETHRES)
-%
-%   Objects in LABELIMAGE are separated along watershed lines in INTENSITYIMAGE
+%   CUTMASK=PERIMETERWATERSHEDSEGMENTATION(LABELIMAGE,INTENSITYIMAGE,PERIMETERTRACE,MAXEQIVRADIUS,MINEQIVANGLE,OBJSIZETHRES,ANLGEMETHOD,SELECTIONMETHOD,NODESNUM)
+%   separates objects in LABELIMAGE along watershed lines determined in INTENSITYIMAGE
 %   between concave regions specified by PERIMETERTRACE. Note that all image operations 
 %   are carried out on small 'mini' images the size of each object's bounding box. 
 %   This approach dramatically reduces computation time!
@@ -15,10 +14,10 @@ function CutMask = PerimeterWatershedSegmentation(LabelImage,IntensityImage,Peri
 %   INTENSITYIMAGE is a grayscale image of class 'double' of the same size as LABELIMAGE.
 %
 %   PERIMETERTRACE is a cell array of curvature measurements (output of PerimeterAnalysis.m)
-%   with entries for each object in LABELIMAGE.
+%   for each object in LABELIMAGE.
 %   
-%   MAXEQIVRADIUS and MINEQIVANGLE are the maximal equivalent radius and the minimal 
-%   equivalent angle concave regions should have to be eligible for cutting.
+%   MAXEQIVRADIUS and MINEQIVANGLE are the maximal equivalent radius and the minimal equivalent
+%   angle concave regions should have to be eligible for cutting.
 %   For details see IdentifyPrimaryIterative.m and PerimeterAnalysis.m.
 %
 %   OBJSIZETHRES is the minimal size cut objects should have. Potential cut lines
@@ -28,6 +27,7 @@ function CutMask = PerimeterWatershedSegmentation(LabelImage,IntensityImage,Peri
 %   processing steps (selected pixels within concave regions -> green points,
 %   selected watershed nodes -> red points, selected watershed lines -> yellow lines)
 %   on the intensity image of each object.
+%
 %
 %   Authors:
 %       Markus Herrmann
@@ -51,7 +51,7 @@ ObjectIDs = setdiff(unique(LabelImage(:)),0);
 % Get outer coordinates of bounding box of each object
 distanceToObjectMax = 3;
 N = floor(BoxPerObj(:,2)-distanceToObjectMax-1);                    f = N < 1;                            N(f) = 1;
-S = ceil(BoxPerObj(:,2)+BoxPerObj(:,4)+distanceToObjectMax+1);   	f = S > size(LabelImage,1);           S(f) = size(LabelImage,1);
+S = ceil(BoxPerObj(:,2)+BoxPerObj(:,4)+distanceToObjectMax+1);      f = S > size(LabelImage,1);           S(f) = size(LabelImage,1);
 W = floor(BoxPerObj(:,1)-distanceToObjectMax-1);                    f = W < 1;                            W(f) = 1;
 E = ceil(BoxPerObj(:,1)+BoxPerObj(:,3)+distanceToObjectMax+1);      f = E > size(LabelImage,2);           E(f) = size(LabelImage,2);
 
@@ -111,20 +111,20 @@ if ~isempty(ObjectIDs)
             pixelsConcaveRegions{j} = propsCurrentRegion(:,1:2);
         end
 
+        if size(propsConcaveRegion, 1) > 30
+            fprintf('%s: object # %d skipped because it has too many concave regions\n', mfilename, i)
+            continue
+        end
+
         %% Select concave regions meeting the Radius/Angle criteria
         QualifyingRegionsMask = (propsConcaveRegion(:,11)>=MinEquivAngle) & (propsConcaveRegion(:,12)<=MaxEqivRadius);%0.1, 30
         SelectedRegions = propsConcaveRegion(QualifyingRegionsMask,:);
 
         %% Define cut points
-        % use all pixels of the concave regions (meeting above radius/angle criteria)
-        CutCoordList = pixelsConcaveRegions(QualifyingRegionsMask);
-        CutCoordList = cell2mat(CutCoordList);
-        pixelsPerRegion = cellfun(@(x) size(x,1), pixelsConcaveRegions(QualifyingRegionsMask));
-        tmp = cell(size(pixelsPerRegion,1),1);
-        for region = 1:size(pixelsPerRegion,1)
-            tmp{region} = repmat(region, pixelsPerRegion(region), 1);
-        end
-        regionIndex = cell2mat(tmp);
+        % use only the pixels of the concave regions with mean/max gradient
+        %CutCoordList = SelectedRegions(:,[9,10]);%mean gradient of regions
+        CutCoordList = SelectedRegions(:,[7,8]);%maximum gradient of regions
+        regionIndex = (1:length(CutCoordList))';
 
 % ======================================================================================================================================
 % === object image -- start ==============================================================================================================
@@ -256,8 +256,9 @@ if ~isempty(ObjectIDs)
 
                 NodeCoordList(:,1) = PotentialNodesCoordinates(:,2);
                 NodeCoordList(:,2) = PotentialNodesCoordinates(:,1);
+
                 % Calculate distances between potential cut points and nodes and determine closest nodes/cut points and the respective indexes
-                [~,ClosestNodesIndex] = pdist2(NodeCoordList,miniCutCoordList,'euclidean','Smallest',1);
+                [~,ClosestNodesIndex] = pdist2(NodeCoordList,miniCutCoordList,'euclidean','Smallest',3);
                 ClosestNodesIndex = unique(ClosestNodesIndex(:));
                 
                 %=============debug=============

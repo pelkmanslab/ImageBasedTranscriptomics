@@ -103,7 +103,7 @@ function handles = IdentifyPrimaryIterative(handles)
 % Test mode for perimeter analysis: 
 % Displays curvature, convex/concave, equivalent radius and segment of each object.
 % Pick values from images to fine tune settings.
-% 
+%
 % DEPENDENCIES:
 % PerimeterAnalysis.m
 % PerimeterWatershedSegmentation.m
@@ -532,29 +532,27 @@ end
 % Plot area/shape feature data
 if strcmp(TestMode2,'Yes')
     if ~isempty(cellPerimeterProps)
-        if ~classifier
-            for h = 1:CuttingPasses
-                imSolidity = rplabel(logical(imObjects(:,:,h)), [], objSolidity{h});
-                imFormFactor = rplabel(logical(imObjects(:,:,h)), [], objFormFactor{h});
-                imArea = rplabel(logical(imObjects(:,:,h)), [], objArea{h});
-                
-                % could be nicely done with cbrewer() but stupid 'freezeColors'
-                % erases the indices!!! note that colorbars could be preserved
-                % with 'cbfreeze'
-                %             cmapR = cbrewer('seq', 'Reds', 9);
-                %             cmapG = cbrewer('seq', 'Greens', 9);
-                %             cmapB = cbrewer('seq', 'Blues', 9);
-                
-                CPfigure('Tag','Features for object selection')
-                subplot(2,2,1), CPimagesc(imSolidity,handles), %colormap(cmapR),
-                title(['Solidity of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-                subplot(2,2,2), CPimagesc(imFormFactor,handles), %colormap(cmapG),
-                title(['Form factor of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-                subplot(2,2,3), CPimagesc(imArea,handles), %colormap(cmapB),
-                title(['Area of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-                subplot(2,2,4), CPimagesc(imSelected(:,:,h),handles), colormap('jet'),
-                title(['Selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-            end
+        for h = 1:CuttingPasses
+            imSolidity = rplabel(logical(imObjects(:,:,h)), [], objSolidity{h});
+            imFormFactor = rplabel(logical(imObjects(:,:,h)), [], objFormFactor{h});
+            imArea = rplabel(logical(imObjects(:,:,h)), [], objArea{h});
+            
+            % could be nicely done with cbrewer() but stupid 'freezeColors'
+            % erases the indices!!! note that colorbars could be preserved
+            % with 'cbfreeze'
+            %             cmapR = cbrewer('seq', 'Reds', 9);
+            %             cmapG = cbrewer('seq', 'Greens', 9);
+            %             cmapB = cbrewer('seq', 'Blues', 9);
+            
+            CPfigure('Tag','Features for object selection')
+            subplot(2,2,1), CPimagesc(imSolidity,handles), %colormap(cmapR),
+            title(['Solidity of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+            subplot(2,2,2), CPimagesc(imFormFactor,handles), %colormap(cmapG),
+            title(['Form factor of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+            subplot(2,2,3), CPimagesc(imArea,handles), %colormap(cmapB),
+            title(['Area of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+            subplot(2,2,4), CPimagesc(imSelected(:,:,h),handles), colormap('jet'),
+            title(['Selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
         end
     end
 end
