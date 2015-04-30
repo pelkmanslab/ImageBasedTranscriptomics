@@ -335,12 +335,18 @@ if ~isempty(imInputObjects)
         
         % Perform perimeter analysis
         cellPerimeterProps{i} = PerimeterAnalysis(imObj2Cut,WindowSize);
+
+        % This parameter limits the number of allowed concave regions.
+        % It can serve as a safety measure to prevent runtime problems for
+        % very complex objects.
+        % This could become an input argument in the future!?
+        numRegionTheshold = 30;
         
         % Perform the actual segmentation
         if strcmp(DebugMode, 'On')
-            imCutMask(:,:,i) = PerimeterWatershedSegmentation(imObj2Cut,OrigImage,cellPerimeterProps{i},PerimSegEqRadius,PerimSegEqSegment,LowerSizeCutThres, 'debugON');
+            imCutMask(:,:,i) = PerimeterWatershedSegmentation(imObj2Cut,OrigImage,cellPerimeterProps{i},PerimSegEqRadius,PerimSegEqSegment,LowerSizeCutThres, numRegionTheshold, 'debugON');
         else
-            imCutMask(:,:,i) = PerimeterWatershedSegmentation(imObj2Cut,OrigImage,cellPerimeterProps{i},PerimSegEqRadius,PerimSegEqSegment,LowerSizeCutThres);
+            imCutMask(:,:,i) = PerimeterWatershedSegmentation(imObj2Cut,OrigImage,cellPerimeterProps{i},PerimSegEqRadius,PerimSegEqSegment,LowerSizeCutThres, numRegionTheshold);
         end
         imCut(:,:,i) = bwlabel(imObj2Cut.*~imCutMask(:,:,i));
         

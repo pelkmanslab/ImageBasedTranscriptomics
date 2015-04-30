@@ -1,8 +1,8 @@
-function CutMask = PerimeterWatershedSegmentation(LabelImage,IntensityImage,PerimeterTrace,MaxEqivRadius,MinEquivAngle,ObjSizeThres,varargin)
+function CutMask = PerimeterWatershedSegmentation(LabelImage,IntensityImage,PerimeterTrace,MaxEqivRadius,MinEquivAngle,ObjSizeThres,numRegionThreshold,varargin)
 %PERIMETERWATERSHEDSEGMENTATION separates clumped objects along watershed
 %lines between concave regions.
 %
-%   CUTMASK=PERIMETERWATERSHEDSEGMENTATION(LABELIMAGE,INTENSITYIMAGE,PERIMETERTRACE,MAXEQIVRADIUS,MINEQIVANGLE,OBJSIZETHRES,ANLGEMETHOD,SELECTIONMETHOD,NODESNUM)
+%   CUTMASK=PERIMETERWATERSHEDSEGMENTATION(LABELIMAGE,INTENSITYIMAGE,PERIMETERTRACE,MAXEQIVRADIUS,MINEQIVANGLE,OBJSIZETHRES,NUMREGIONTHRESHOLD)
 %   separates objects in LABELIMAGE along watershed lines determined in INTENSITYIMAGE
 %   between concave regions specified by PERIMETERTRACE. Note that all image operations 
 %   are carried out on small 'mini' images the size of each object's bounding box. 
@@ -22,6 +22,9 @@ function CutMask = PerimeterWatershedSegmentation(LabelImage,IntensityImage,Peri
 %
 %   OBJSIZETHRES is the minimal size cut objects should have. Potential cut lines
 %   will be discarded in case the resulting objects would fall below this threshold.
+%
+%   NUMREGIONTHRESHOLD is the maximally allowed number of concave regions.
+%   Objects that have more concave regions than this value are not processed!
 %
 %   Optional input arguments: 'debugON' command results in the display of all intermediate
 %   processing steps (selected pixels within concave regions -> green points,
@@ -111,7 +114,7 @@ if ~isempty(ObjectIDs)
             pixelsConcaveRegions{j} = propsCurrentRegion(:,1:2);
         end
 
-        if size(propsConcaveRegion, 1) > 30
+        if size(propsConcaveRegion, 1) > numRegionThreshold
             fprintf('%s: object # %d skipped because it has too many concave regions\n', mfilename, i)
             continue
         end
