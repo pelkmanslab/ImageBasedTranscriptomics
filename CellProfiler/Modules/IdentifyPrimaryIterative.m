@@ -324,6 +324,16 @@ if ~isempty(imInputObjects)
         SmoothDisk = getnhood(strel('disk',smoothingDiskSize,0));%minimum that has to be done to avoid problems with bwtraceboundary
         imObj2Cut = bwlabel(imdilate(imerode(imObj2Cut,SmoothDisk),SmoothDisk));
         
+        % In rare cases the above smoothing approach creates new, small
+        % objects that cause problems. Let's remove them.
+        props = regionprops(logical(imObj2Cut),'Area');
+        objArea2 = cat(1,props.Area);
+        obj2remove = find(objArea2 < LowerSizeThres);
+        for j = 1:length(obj2remove)
+            imObj2Cut(imObj2Cut==obj2remove(j)) = 0;
+        end
+        imObj2Cut = bwlabel(imObj2Cut);
+        
         % Separate clumped objects along watershed lines
 
         % Note: PerimeterAnalysis cannot handle holes in objects (we may
