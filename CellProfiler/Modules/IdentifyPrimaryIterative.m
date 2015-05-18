@@ -5,28 +5,28 @@ function handles = IdentifyPrimaryIterative(handles)
 %
 %
 % DESCRIPTION:
-% Primary identification of objects (nuclei) based on intensity thresholding 
+% Primary identification of objects (nuclei) based on intensity thresholding
 % and subsequent separation of clumped objects along watershed lines between
 % concave regions.
 %
 % DETAILS:
-% Pixels belonging to nuclei objects can be easily separated form background 
+% Pixels belonging to nuclei objects can be easily separated form background
 % pixels by thresholding an image of a nuclei-specific stain such as DAPI.
-% However, this often results in clumps of several individual objects, 
+% However, this often results in clumps of several individual objects,
 % because a single, image-wide threshold value is generally not
 % sufficient to nicely separate objects, which lie very close to each other.
-% Such clumped objects have a distinct morphology. Compared to individual objects, 
+% Such clumped objects have a distinct morphology. Compared to individual objects,
 % which are more or less round and lie within a certain size range,
-% clumped objects are relatively large and display multiple concave regions. 
-% The intersection of individual objects is most likely a line connecting two 
-% concave regions. This separating cut line can be found using the watershed 
-% algorithm. By restricting watershed lines to the area between two concave regions, 
+% clumped objects are relatively large and display multiple concave regions.
+% The intersection of individual objects is most likely a line connecting two
+% concave regions. This separating cut line can be found using the watershed
+% algorithm. By restricting watershed lines to the area between two concave regions,
 % very stable segmentation results can be achieved.
 % The module processes the input image as follows:
 % 1) Initial objects are identified by simple thresholding.
 % 2) Clumped objects are selected on the basis of size and shape features:
 %    area, solidity, and form factor.
-% 3) The perimeter of selected objects is analyzed and concave 
+% 3) The perimeter of selected objects is analyzed and concave
 %    regions along the boundary of objects are identified.
 % 4) Watershed lines connecting two concave regions are determined.
 % 5) All possible cuts along the selected watershed lines are considered and features
@@ -35,14 +35,14 @@ function handles = IdentifyPrimaryIterative(handles)
 % 6) An "optimal" cut line is finally chosen by minimizing a cost function that
 %    evaluates the measured features such that the resulting objects have a minimal
 %    size and are as round as possible, while the separating line is as straight
-%    and short as possible and the intensity along the line as low as possible. 
+%    and short as possible and the intensity along the line as low as possible.
 % Note that once an object has been selected for cutting and concave regions
-% have been identified, a cut is inevitably made! 
-% You can control the selection of clumped objects and the identification of 
+% have been identified, a cut is inevitably made!
+% You can control the selection of clumped objects and the identification of
 % concave regions by setting the corresponding parameters (see below).
-% Test modes are available for both steps that allow choosing parameter values 
+% Test modes are available for both steps that allow choosing parameter values
 % in a visually assisted way.
-% 
+%
 %
 % PARAMETERS:
 % Object name:
@@ -50,7 +50,7 @@ function handles = IdentifyPrimaryIterative(handles)
 %
 % Image name:
 % The name of the input image in which primary objects should be identified.
-% 
+%
 % Threshold correction factor:
 % When the threshold is calculated automatically, it may consistently be
 % too stringent or too lenient. You may need to enter an adjustment factor,
@@ -67,10 +67,10 @@ function handles = IdentifyPrimaryIterative(handles)
 % automatically. For example, if there are no objects in the field of view,
 % the automatic threshold will be unreasonably low. In such cases, the
 % lower bound you enter here will override the automatic threshold.
-% 
-% Cutting passes: 
+%
+% Cutting passes:
 % Each pass, only one cut per concave region is allowed, possibly making it
-% necessary to perform additional cutting passes to separate clumps of 
+% necessary to perform additional cutting passes to separate clumps of
 % more than two objects.
 %
 % Debug mode:
@@ -80,27 +80,27 @@ function handles = IdentifyPrimaryIterative(handles)
 % i.e. whether the correct regions and lines are selected for each object.
 %
 % Object selection:
-% Limits for solidity, form factor, and upper and lower size of objects to be 
+% Limits for solidity, form factor, and upper and lower size of objects to be
 % selected for cutting. Determine optimal values via test mode.
-% 
-% Test mode for object selection: 
+%
+% Test mode for object selection:
 % Displays solidity, area, and (transformed) form factor values for each primary
 % object identified by thresholding. Pick values from images to fine tune settings.
 %
-% Perimeter analysis: 
+% Perimeter analysis:
 % Parameters for detection of concave regions. Determine optimal value via test mode.
 % Window size:
 % Sliding window for calculating the curvature of objects. Large values result
 % in more continuous, smoother but maybe less precise regions, while small values
 % give more precise, but smaller and less continuous regions.
-% Max equivalent radius: 
+% Max equivalent radius:
 % Maximum equivalent radius of a concave region to be eligible for cutting.
 % Higher values increase sensitivity and result in more cut options.
-% Min equivalent segment: 
-% Minimum equivalent circular fragment (degree) of a concave region to be 
+% Min equivalent segment:
+% Minimum equivalent circular fragment (degree) of a concave region to be
 % eligible for cutting. Lower values increase sensitivity and result in more cut options.
 %
-% Test mode for perimeter analysis: 
+% Test mode for perimeter analysis:
 % Displays curvature, convex/concave, equivalent radius and segment of each object.
 % Pick values from images to fine tune settings.
 %
@@ -139,11 +139,11 @@ ImageName = char(handles.Settings.VariableValues{CurrentModuleNum,2});
 %inputtypeVAR02 = popupmenu
 
 %textVAR03 = Intensity thresholding: Threshold correction factor
-%defaultVAR03 = 1
+%defaultVAR03 = 0.98
 ThresholdCorrection = str2num(char(handles.Settings.VariableValues{CurrentModuleNum,3}));
 
 %textVAR04 = Intensity thresholding: Lower and upper bounds on threshold, in the range [0,1]
-%defaultVAR04 = 0,1
+%defaultVAR04 = 0.0019,0.02
 ThresholdRange = char(handles.Settings.VariableValues{CurrentModuleNum,4});
 
 %textVAR05 = Cutting passes (0 = no cutting)
@@ -165,7 +165,7 @@ SolidityThres = str2double(char(handles.Settings.VariableValues{CurrentModuleNum
 FormFactorThres = str2double(char(handles.Settings.VariableValues{CurrentModuleNum,8}));
 
 %textVAR09 = Object selection: Maximal AREA of objects, which should be cut (0 = area independent)
-%defaultVAR09 = 50000
+%defaultVAR09 = 500000
 UpperSizeThres = str2double(char(handles.Settings.VariableValues{CurrentModuleNum,9}));
 
 %textVAR10 = Object selection: Minimal AREA of objects, which should be cut (0 = area independent)
@@ -183,7 +183,7 @@ TestMode2 = char(handles.Settings.VariableValues{CurrentModuleNum,12});
 %inputtypeVAR12 = popupmenu
 
 %textVAR13 = Perimeter analysis: SLIDING WINDOW size for curvature calculation
-%defaultVAR13 = 8
+%defaultVAR13 = 9
 WindowSize = str2double(char(handles.Settings.VariableValues{CurrentModuleNum,13}));
 
 %textVAR14 = Perimeter analysis: FILTER SIZE for smoothing objects
@@ -191,7 +191,7 @@ WindowSize = str2double(char(handles.Settings.VariableValues{CurrentModuleNum,13
 smoothingDiskSize = str2double(char(handles.Settings.VariableValues{CurrentModuleNum,14}));
 
 %textVAR15 = Perimeter analysis: Maximum concave region equivalent RADIUS
-%defaultVAR15 = 30
+%defaultVAR15 = 20
 PerimSegEqRadius = str2double(char(handles.Settings.VariableValues{CurrentModuleNum,15}));
 
 %textVAR16 = Perimeter analysis: Minimum concave region equivalent CIRCULAR SEGMENT (degree)
@@ -288,19 +288,19 @@ if ~isempty(imInputObjects)
         
         % Measure basic area/shape features
         props = regionprops(logical(imObjects(:,:,i)),'Area','Solidity','Perimeter');
-
+        
         % Features used for object selection
         objSolidity{i} = cat(1,props.Solidity);
         objArea{i} = cat(1,props.Area);
         tmp = log((4*pi*cat(1,props.Area)) ./ ((cat(1,props.Perimeter)+1).^2))*(-1);%make values positive for easier interpretation of parameter values
         tmp(tmp<0) = 0;
         objFormFactor{i} = tmp;
-
+        
         % Select objects based on these features (user defined thresholds)
         obj2cut = objSolidity{i} < SolidityThres & objFormFactor{i} > FormFactorThres ...
             & objArea{i} > LowerSizeThres & objArea{i} < UpperSizeThres;
         objNot2cut = ~obj2cut;
-                    
+        
         objSelected = zeros(size(obj2cut));
         objSelected(obj2cut) = 1;
         objSelected(objNot2cut) = 2;
@@ -335,7 +335,7 @@ if ~isempty(imInputObjects)
         imObj2Cut = bwlabel(imObj2Cut);
         
         % Separate clumped objects along watershed lines
-
+        
         % Note: PerimeterAnalysis cannot handle holes in objects (we may
         % want to implement this in case of big clumps of many objects).
         % Sliding window size is linked to object size. Small object sizes
@@ -345,7 +345,7 @@ if ~isempty(imInputObjects)
         
         % Perform perimeter analysis
         cellPerimeterProps{i} = PerimeterAnalysis(imObj2Cut,WindowSize);
-
+        
         % This parameter limits the number of allowed concave regions.
         % It can serve as a safety measure to prevent runtime problems for
         % very complex objects.
@@ -373,35 +373,36 @@ if ~isempty(imInputObjects)
         imCutShapeObjectsLabel = label2rgb(bwlabel(imCut(:,:,i)),'jet','k','shuffle');
         
         % GUI
-        tmpSelected = (imSelected(:,:,i));
-        ThisModuleFigureNumber = handles.Current.(['FigureNumberForModule',CurrentModule]);
-        CPfigure(handles,'Image',ThisModuleFigureNumber);
-        subplot(2,2,2), CPimagesc(logical(tmpSelected==1),handles),
-        title(['Cut lines on selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-        hold on
-        L = bwboundaries(logical(imCutMask(:,:,i)), 'noholes');
-        for l = 1:length(L)
-            line = L{l};
-            plot(line(:,2), line(:,1), 'r', 'LineWidth', 3);
+        if CPisHeadless == false
+            tmpSelected = (imSelected(:,:,i));
+            ThisModuleFigureNumber = handles.Current.(['FigureNumberForModule',CurrentModule]);
+            CPfigure(handles,'Image',ThisModuleFigureNumber);
+            subplot(2,2,2); CPimagesc(logical(tmpSelected==1),handles);
+            title(['Cut lines on selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+            hold on
+            L = bwboundaries(logical(imCutMask(:,:,i)), 'noholes');
+            for l = 1:length(L)
+                line = L{l};
+                plot(line(:,2), line(:,1), 'r', 'LineWidth', 3);
+            end
+            hold off
+            freezeColors
+            subplot(2,2,1); CPimagesc(imSelected(:,:,i),handles); colormap('jet');
+            title(['Selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+            freezeColors
+            subplot(2,2,3); CPimagesc(imOutlineShapeSeparatedOverlay,handles);
+            title(['Outlines of Separated objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+            hold on
+            for k = 1:length(B)
+                boundary = B{k};
+                plot(boundary(:,2), boundary(:,1), 'r', 'LineWidth', 1);
+            end
+            hold off
+            freezeColors
+            subplot(2,2,4); CPimagesc(imCutShapeObjectsLabel,handles);
+            title(['Separated objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+            freezeColors
         end
-        hold off
-        freezeColors
-        subplot(2,2,1), CPimagesc(imSelected(:,:,i),handles), colormap('jet'),
-        title(['Selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-        freezeColors
-        subplot(2,2,3), CPimagesc(imOutlineShapeSeparatedOverlay,handles),
-        title(['Outlines of Separated objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-        hold on
-        for k = 1:length(B)
-            boundary = B{k};
-            plot(boundary(:,2), boundary(:,1), 'r', 'LineWidth', 1)
-        end
-        hold off
-        freezeColors
-        subplot(2,2,4), CPimagesc(imCutShapeObjectsLabel,handles),
-        title(['Separated objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-        freezeColors
-        
     end
     
     %-----------------------------------------------
@@ -448,33 +449,34 @@ imCutShapeObjectsLabel = label2rgb(bwlabel(imFinalObjects),'jet','k','shuffle');
 
 % GUI
 % CPfigure(handles,'Image',ThisModuleFigureNumber);
-imDisplay = imSelected(:,:,1);
-subplot(2,2,2), CPimagesc(logical(imDisplay),handles),
-title(['Cut lines on selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-hold on
-L = bwboundaries(logical(sum(imCutMask, 3)), 'noholes');
-for i = 1:length(L)
-    line = L{i};
-    plot(line(:,2), line(:,1), 'r', 'LineWidth', 3);
+if CPisHeadless == false
+    imDisplay = imSelected(:,:,1);
+    subplot(2,2,2); CPimagesc(logical(imDisplay),handles);
+    title(['Cut lines on selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+    hold on
+    L = bwboundaries(logical(sum(imCutMask, 3)), 'noholes');
+    for i = 1:length(L)
+        line = L{i};
+        plot(line(:,2), line(:,1), 'r', 'LineWidth', 3);
+    end
+    hold off
+    freezeColors
+    subplot(2,2,1); CPimagesc(imDisplay,handles); colormap('jet'),
+    title(['Selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+    freezeColors
+    subplot(2,2,3); CPimagesc(imOutlineShapeSeparatedOverlay,handles);
+    title(['Outlines of Separated objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+    hold on
+    for k = 1:length(B)
+        boundary = B{k};
+        plot(boundary(:,2), boundary(:,1), 'r', 'LineWidth', 1);
+    end
+    hold off
+    freezeColors
+    subplot(2,2,4); CPimagesc(imCutShapeObjectsLabel,handles);
+    title(['Separated objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+    freezeColors
 end
-hold off
-freezeColors
-subplot(2,2,1), CPimagesc(imDisplay,handles), colormap('jet'),
-title(['Selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-freezeColors
-subplot(2,2,3), CPimagesc(imOutlineShapeSeparatedOverlay,handles),
-title(['Outlines of Separated objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-hold on
-for k = 1:length(B)
-    boundary = B{k};
-    plot(boundary(:,2), boundary(:,1), 'r', 'LineWidth', 1);
-end
-hold off
-freezeColors
-subplot(2,2,4), CPimagesc(imCutShapeObjectsLabel,handles),
-title(['Separated objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-freezeColors
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % if strcmpi(savePDF, 'Yes')
@@ -547,33 +549,40 @@ end
 
 % Plot area/shape feature data
 if strcmp(TestMode2,'Yes')
-    if ~isempty(cellPerimeterProps)
-        for h = 1:CuttingPasses
-            imSolidity = rplabel(logical(imObjects(:,:,h)), [], objSolidity{h});
-            imFormFactor = rplabel(logical(imObjects(:,:,h)), [], objFormFactor{h});
-            imArea = rplabel(logical(imObjects(:,:,h)), [], objArea{h});
-            
-            % could be nicely done with cbrewer() but stupid 'freezeColors'
-            % erases the indices!!! note that colorbars could be preserved
-            % with 'cbfreeze'
-            %             cmapR = cbrewer('seq', 'Reds', 9);
-            %             cmapG = cbrewer('seq', 'Greens', 9);
-            %             cmapB = cbrewer('seq', 'Blues', 9);
-            
-            CPfigure('Tag','Features for object selection')
-            subplot(2,2,1), CPimagesc(imSolidity,handles), %colormap(cmapR),
-            title(['Solidity of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-            subplot(2,2,2), CPimagesc(imFormFactor,handles), %colormap(cmapG),
-            title(['Form factor of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-            subplot(2,2,3), CPimagesc(imArea,handles), %colormap(cmapB),
-            title(['Area of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-            subplot(2,2,4), CPimagesc(imSelected(:,:,h),handles), colormap('jet'),
-            title(['Selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+    if CPisHeadless == false
+        if ~isempty(cellPerimeterProps)
+            for h = 1:CuttingPasses
+                imSolidity = rplabel(logical(imObjects(:,:,h)), [], objSolidity{h});
+                imFormFactor = rplabel(logical(imObjects(:,:,h)), [], objFormFactor{h});
+                imArea = rplabel(logical(imObjects(:,:,h)), [], objArea{h});
+                
+                % could be nicely done with cbrewer() but stupid 'freezeColors'
+                % erases the indices!!! note that colorbars could be preserved
+                % with 'cbfreeze'
+                %             cmapR = cbrewer('seq', 'Reds', 9);
+                %             cmapG = cbrewer('seq', 'Greens', 9);
+                %             cmapB = cbrewer('seq', 'Blues', 9);
+                
+                CPfigure('Tag','Features for object selection')
+                subplot(2,2,1); CPimagesc(imSolidity,handles); %colormap(cmapR),
+                title(['Solidity of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+                subplot(2,2,2); CPimagesc(imFormFactor,handles); %colormap(cmapG),
+                title(['Form factor of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+                subplot(2,2,3); CPimagesc(imArea,handles); %colormap(cmapB),
+                title(['Area of original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+                subplot(2,2,4); CPimagesc(imSelected(:,:,h),handles); colormap('jet');
+                title(['Selected original objects, cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+            end
         end
     end
 end
 
-
+% [TS if there is no background pixel: remove all
+% objects - otherwise one widespread assumption of CP is broken, leading to
+% various errors and problems in later modules]
+if ~any(imFinalObjects(:) == 0)
+   imFinalObjects = zeros(size(imFinalObjects));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SAVE DATA TO HANDLES STRUCTURE %%
@@ -592,6 +601,9 @@ handles.Pipeline.(fieldname) = imFinalObjects;
 handles.Measurements.(ObjectName).LocationFeatures = {'CenterX','CenterY'};
 tmp = regionprops(imFinalObjects,'Centroid');
 Centroid = cat(1,tmp.Centroid);
+if isempty(Centroid)
+    Centroid = [0 0];   % follow CP's convention to save 0s if no object
+end
 handles.Measurements.(ObjectName).Location(handles.Current.SetBeingAnalyzed) = {Centroid};
 
 %%% Saves ObjectCount, i.e. number of segmented objects.

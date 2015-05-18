@@ -53,7 +53,7 @@ function handles = IdentifySpots2D(handles)
 % your illumination source. When using a robust confocal microscope you can
 % set the lowest and highest possible values to values,  which are very
 % close (or even identical). If your light source is variable during the
-% acquisition (which can be the case with Halogen lamps) you might choose 
+% acquisition (which can be the case with Halogen lamps) you might choose
 % less strict borders to detect spots of varying intensites.
 %
 % THRESHOLD OF SPOT DETECTION
@@ -90,7 +90,7 @@ function handles = IdentifySpots2D(handles)
 %
 % Website: http://www.imls.uzh.ch/research/pelkmans.html
 %
-% The design of this module largely follows a IdentifyPrimLoG2 by 
+% The design of this module largely follows a IdentifyPrimLoG2 by
 % Baris Sumengen.
 %
 % $Revision: 1889 $
@@ -324,43 +324,44 @@ end
 drawnow
 ThisModuleFigureNumber = handles.Current.(['FigureNumberForModule',CurrentModule]);
 if any(findobj == ThisModuleFigureNumber)
-    
-    % Activates the appropriate figure window.
-    CPfigure(handles,'Image',ThisModuleFigureNumber);
-    
-    subplot(2,1,1)      % Subplot with input image
-    CPimagesc(Image,handles);
-    title([ImageName, ' cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
-    
-    
-    subplot(2,1,2)
-    switch numObjects
-        case 1
-            bwImage = MatrixLabel{1}>0;
-        case 2  % in case that deblending was done, dilate by 2 pixels to help visualization
-            bwImage = imdilate(MatrixLabel{2}>0, strel('disk', 2));
-    end
-    
-    r = (Image - min(Image(:))) / quantile(Image(:),0.995);
-    g = (Image - min(Image(:))) / quantile(Image(:),0.995);
-    b = (Image - min(Image(:))) / quantile(Image(:),0.995);
-    
-    r(bwImage) = max(r(:));
-    g(bwImage) = 0;
-    b(bwImage) = 0;
-    visRGB = cat(3, r, g, b);
-    f = visRGB <0;
-    visRGB(f)=0;
-    f = visRGB >1;
-    visRGB(f)=1;
-    
-    
-    CPimagesc(visRGB, handles);
-    switch numObjects
-        case 1
-            title([ObjectName{1} ' (no deblending) Total count' num2str(ObjCount{1})]);
-        case 2
-            title([ObjectName{2} ' Total count' num2str(ObjCount{2}) ' (after deblending) ' num2str(ObjCount{1}) ' (before deblending)']);
+    if CPisHeadless == false
+        % Activates the appropriate figure window.
+        CPfigure(handles,'Image',ThisModuleFigureNumber);
+        
+        subplot(2,1,1)      % Subplot with input image
+        CPimagesc(Image,handles);
+        title([ImageName, ' cycle # ',num2str(handles.Current.SetBeingAnalyzed)]);
+        
+        
+        subplot(2,1,2)
+        switch numObjects
+            case 1
+                bwImage = MatrixLabel{1}>0;
+            case 2  % in case that deblending was done, dilate by 2 pixels to help visualization
+                bwImage = imdilate(MatrixLabel{2}>0, strel('disk', 2));
+        end
+        
+        r = (Image - min(Image(:))) / quantile(Image(:),0.995);
+        g = (Image - min(Image(:))) / quantile(Image(:),0.995);
+        b = (Image - min(Image(:))) / quantile(Image(:),0.995);
+        
+        r(bwImage) = max(r(:));
+        g(bwImage) = 0;
+        b(bwImage) = 0;
+        visRGB = cat(3, r, g, b);
+        f = visRGB <0;
+        visRGB(f)=0;
+        f = visRGB >1;
+        visRGB(f)=1;
+        
+        
+        CPimagesc(visRGB, handles);
+        switch numObjects
+            case 1
+                title([ObjectName{1} ' (no deblending) Total count' num2str(ObjCount{1})]);
+            case 2
+                title([ObjectName{2} ' Total count' num2str(ObjCount{2}) ' (after deblending) ' num2str(ObjCount{1}) ' (before deblending)']);
+        end
     end
 end
 

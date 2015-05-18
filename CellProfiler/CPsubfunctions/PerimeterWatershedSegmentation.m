@@ -239,6 +239,7 @@ if ~isempty(ObjectIDs)
             if debug
                 [I, J] = find(imCurrentLines>0);
                 figure(h), imagesc(padInt)
+                title(sprintf('Object # %d', i))
                 colormap(gray)
                 freezeColors
                 hold on
@@ -268,6 +269,7 @@ if ~isempty(ObjectIDs)
                 if debug
                     % Display selected regions over intensity image
                     figure(h),imagesc(padInt)
+                    title(sprintf('Object # %d', i))
                     colormap(gray)
                     hold on
                     scatter(miniCutCoordList(:,2), miniCutCoordList(:,1), 2000, 'g', '.');
@@ -277,6 +279,7 @@ if ~isempty(ObjectIDs)
                     % Display selected nodes over intensity image
                     SelectedNodeCoordList = NodeCoordList(ClosestNodesIndex,:);
                     figure(h),imagesc(padInt)
+                    title(sprintf('Object # %d', i))
                     colormap(gray)
                     hold on
                     scatter(SelectedNodeCoordList(:,2), SelectedNodeCoordList(:,1), 2000, 'r', '.');
@@ -472,6 +475,7 @@ if ~isempty(ObjectIDs)
                         [I, J] = find(logical(AllLinesImage));
                         
                         figure(h), imagesc(padInt)
+                        title(sprintf('Object # %d', i))
                         colormap(gray)
                         hold on
                         scatter(J, I, 150, 'y', 's', 'MarkerFaceColor', 'y')
@@ -527,6 +531,7 @@ if ~isempty(ObjectIDs)
                     BestLineImage(AllLines(BestLinesIndex(1)).lineimage>0) = 1;
                     [I, J] = find(logical(BestLineImage));
                     figure(h),imagesc(padInt)
+                    title(sprintf('Object # %d', i))
                     colormap(gray)
                     hold on
                     scatter(J, I, 150, 'y', 's', 'MarkerFaceColor','y')
