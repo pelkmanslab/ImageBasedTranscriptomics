@@ -100,7 +100,7 @@ else % only process segmentation, if at least one object is present
     end
     
     % Determine object centroids that are close to the border of the image
-    positionofobject=handles.Measurements.Nuclei.Location{handles.Current.SetBeingAnalyzed};
+    positionofobject=handles.Measurements.(ObjectName).Location{handles.Current.SetBeingAnalyzed};
     
     atBorder=[];
     imagesizeforborder=size(LabelMatrixImage);
