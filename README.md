@@ -1,4 +1,4 @@
-# ImageBasedTranscriptomics
+# Image-Based Transcriptomics
 
 This repository contains a series of CellProfiler modules and example code for high-throughput quantification of single transcript molecules. 
 
